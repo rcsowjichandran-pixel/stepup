@@ -1,0 +1,81 @@
+.shop-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.shop-product-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+  margin-bottom: 8px;
+  color: #555;
+  font-size: 10px;
+}
+
+.shop-product-color {
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 50%;
+}
+
+.shop-product-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 6px;
+}
+
+.shop-product-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 28px;
+  padding: 4px 5px;
+  border: 1px solid #2f4f4f;
+  border-radius: 4px;
+  cursor: pointer;
+  font: 600 10px Inter, sans-serif;
+  white-space: nowrap;
+}
+
+.shop-buy-button {
+  background: #fff;
+  color: #2f4f4f;
+}
+
+.shop-add-button {
+  gap: 4px;
+  background: #2f4f4f;
+  color: #fff;
+}
+
+.shop-product-actions button:hover {
+  box-shadow: 0 2px 7px rgba(47, 79, 79, 0.2);
+}
+
+@media (max-width: 1050px) {
+  .shop-products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .shop-layout {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 18px !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .shop-products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .shop-product-actions button {
+    font-size: 9px;
+  }
+}

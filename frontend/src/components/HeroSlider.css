@@ -1,0 +1,24 @@
+.hero-slide-dot {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hero-slide-dot::after {
+  width: 8px;
+  height: 8px;
+  border: 1px solid #2F4F4F;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  content: '';
+}
+
+.hero-slide-dot[aria-pressed='true']::after {
+  background: #2F4F4F;
+  border-color: #FFFFFF;
+}
