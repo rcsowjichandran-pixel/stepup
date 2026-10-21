@@ -32,7 +32,7 @@ export default function AboutPage({ setCurrentPage }) {
 
         <div className="about-side-art">
           <span className="about-side-art-backdrop" aria-hidden="true" />
-          <img src="/media/about.jpg" alt="StepUp footwear collection" />
+          <img src="https://stepup-wx1d.onrender.com/media/about.jpg" alt="StepUp footwear collection" />
         </div>
 
         <section className="about-intro" aria-labelledby="about-title">
@@ -60,7 +60,7 @@ export default function AboutPage({ setCurrentPage }) {
           <div
             className="about-mission-image"
           >
-            <img src="https://stepup-wx1d.onrender.com/media/about.jpg" alt="StepUp footwear collection"/>
+            <img src="/media/aboutcenter.jpg" alt="Blue and pink children's shoes" />
           </div>
         </section>
 
