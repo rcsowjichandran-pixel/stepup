@@ -24,6 +24,8 @@ class Order(models.Model):
     discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     payment_method = models.CharField(max_length=50, default='Cash on Delivery')
     payment_status = models.CharField(max_length=20, default='Pending')
+    razorpay_order_id = models.CharField(max_length=100, blank=True, default='')
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, default='')
     order_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Processing')
     
     created_at = models.DateTimeField(auto_now_add=True)

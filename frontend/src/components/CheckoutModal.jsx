@@ -6,6 +6,19 @@ import { api } from '../services/api';
 
 const DELIVERY_STORAGE_KEY = 'stepup_last_delivery';
 const CASH_ON_DELIVERY = 'Cash on Delivery';
+const RAZORPAY = 'Razorpay';
+
+function loadRazorpay() {
+  if (window.Razorpay) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Could not load Razorpay Checkout.'));
+    document.body.appendChild(script);
+  });
+}
 
 function getDeliveryStorageKey(user) {
   const accountId = user?.id ?? user?.email ?? user?.username;
@@ -70,7 +83,7 @@ export default function CheckoutModal({
   onOrderComplete,
   selectedPaymentMethod = CASH_ON_DELIVERY,
 }) {
-  const { cartItems, grandTotal, discountAmount, clearCart } = useCart();
+  const { cartItems, grandTotal, discountAmount, coupon, clearCart } = useCart();
   const { user, token } = useAuth();
   const [deliveryStorageKey] = useState(() => getDeliveryStorageKey(user));
   const [savedDelivery] = useState(() => readSavedDelivery(deliveryStorageKey));
@@ -105,6 +118,7 @@ export default function CheckoutModal({
       total_amount: grandTotal,
       discount_amount: discountAmount,
       payment_method: paymentMethod,
+      coupon_code: coupon?.code || '',
       cart_items: cartItems.map((item) => ({
         product_id: item.id,
         name: item.name,
@@ -117,6 +131,36 @@ export default function CheckoutModal({
 
     try {
       const response = await api.checkout(payload, token);
+      let paymentStatus = response.payment_status;
+
+      if (paymentMethod === RAZORPAY) {
+        await loadRazorpay();
+        const paymentResponse = await new Promise((resolve, reject) => {
+          const checkout = new window.Razorpay({
+            key: response.razorpay_key_id,
+            amount: response.amount,
+            currency: response.currency,
+            name: 'StepUp',
+            description: `Order #${response.order_id}`,
+            order_id: response.razorpay_order_id,
+            prefill: { name: formData.fullName, email: formData.email, contact: formData.phone },
+            theme: { color: '#2F4F4F' },
+            handler: resolve,
+            modal: { ondismiss: () => reject(new Error('Payment was cancelled. You can try again.')) },
+          });
+          checkout.on('payment.failed', (failure) => {
+            reject(new Error(failure.error?.description || 'Payment failed. Please try again.'));
+          });
+          checkout.open();
+        });
+        const verification = await api.verifyPayment({
+          order_id: response.order_id,
+          razorpay_payment_id: paymentResponse.razorpay_payment_id,
+          razorpay_order_id: paymentResponse.razorpay_order_id,
+          razorpay_signature: paymentResponse.razorpay_signature,
+        });
+        paymentStatus = verification.payment_status;
+      }
       try {
         if (deliveryStorageKey) {
           localStorage.setItem(deliveryStorageKey, JSON.stringify({
@@ -137,17 +181,17 @@ export default function CheckoutModal({
       setOrderSuccess({
         orderId: response.order_id,
         total: Number(response.total_amount),
-        paymentStatus: response.payment_status,
+        paymentStatus,
         paymentMethod: response.payment_method,
         estimatedDelivery: getEstimatedDeliveryRange(new Date()),
       });
-      clearCart();
+      if (paymentMethod === CASH_ON_DELIVERY || paymentStatus === 'Paid') clearCart();
     } catch (checkoutError) {
       setError(checkoutError.message || 'Could not place your order. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [cartItems, clearCart, deliveryStorageKey, discountAmount, formData, grandTotal, loading, token]);
+  }, [cartItems, clearCart, coupon, deliveryStorageKey, discountAmount, formData, grandTotal, loading, token]);
 
   const handleChange = (event) => {
     setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
@@ -319,7 +363,7 @@ export default function CheckoutModal({
             </p>
 
             <div style={{ display: 'grid', gap: '8px', marginBottom: '18px' }}>
-              {[CASH_ON_DELIVERY, 'UPI', 'Google Pay', 'PayPal', 'Clearpay', 'Klarna'].map((method) => (
+              {[CASH_ON_DELIVERY, RAZORPAY].map((method) => (
                 <button
                   key={method}
                   type="button"
@@ -366,7 +410,7 @@ export default function CheckoutModal({
             }}>
               {formData.paymentMethod === CASH_ON_DELIVERY
                 ? 'Pay the delivery partner when your order arrives.'
-                : 'Online payment is not connected yet. Placing this order will record it as pending; no money will be charged.'}
+                : 'Pay securely using the payment methods enabled in Razorpay Checkout.'}
             </div>
 
             <div style={{
@@ -454,7 +498,7 @@ export default function CheckoutModal({
             >
               {formData.paymentMethod === CASH_ON_DELIVERY
                 ? `Place Order · Cash on Delivery · ₹${grandTotal.toLocaleString()}`
-                : `Place Order · Payment Pending · ₹${grandTotal.toLocaleString()}`}
+                : `Pay with Razorpay · ₹${grandTotal.toLocaleString()}`}
             </button>
           </div>
         ) : (

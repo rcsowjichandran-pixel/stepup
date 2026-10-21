@@ -1,5 +1,6 @@
-const API_BASE = 'https://stepup-wx1d.onrender.com/api';
-export const MEDIA_BASE = 'https://stepup-wx1d.onrender.com/media';
+const API_ORIGIN = import.meta.env.VITE_API_BASE || 'https://stepup-wx1d.onrender.com/api';
+const API_BASE = API_ORIGIN.replace(/\/$/, '');
+export const MEDIA_BASE = `${API_BASE.replace(/\/api$/, '')}/media`;
 
 export const api = {
   // Auth
@@ -120,6 +121,17 @@ export const api = {
         .find((value) => typeof value === 'string');
       throw new Error(data.detail || validationMessage || 'Checkout failed');
     }
+    return data;
+  },
+
+  async verifyPayment(paymentData) {
+    const res = await fetch(`${API_BASE}/orders/verify-payment/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(paymentData),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Could not verify the payment');
     return data;
   },
 };

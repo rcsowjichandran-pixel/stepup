@@ -4,7 +4,26 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load local development settings from backend/.env without requiring a package.
+# Environment variables already set by the host take precedence.
+ENV_FILE = BASE_DIR / '.env'
+if ENV_FILE.exists():
+    for env_line in ENV_FILE.read_text(encoding='utf-8').splitlines():
+        env_line = env_line.strip()
+        if not env_line or env_line.startswith('#'):
+            continue
+        if env_line.startswith('export '):
+            env_line = env_line[7:].strip()
+        env_name, separator, env_value = env_line.partition('=')
+        if separator and env_name.strip():
+            env_value = env_value.strip().strip('"').strip("'")
+            os.environ.setdefault(env_name.strip(), env_value)
+
 SECRET_KEY = 'django-insecure-stepup-super-secret-key-2026-footwear-store'
+
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', '')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', '')
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
 
 DEBUG = True
 

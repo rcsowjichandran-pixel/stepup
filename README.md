@@ -101,4 +101,18 @@ npm run dev -- --host 127.0.0.1 --port 5173
 ```
 Website URL: `http://127.0.0.1:5173/`
 Vite proxies `/media/` requests to Django, so imported backend images are served through the frontend origin.
-After a successful order, delivery details are saved in the browser and reused for the next checkout. UPI and online payment selections are recorded as pending until a payment gateway is configured; they do not charge a customer.
+For local development, the frontend API URL defaults to the deployed API. Set `VITE_API_BASE=http://127.0.0.1:8000/api` before starting Vite to use your local Django server.
+
+### Razorpay test setup
+
+1. Install backend dependencies and apply the new order fields:
+   ```powershell
+   cd E:\Stepup\backend
+   python -m pip install -r requirements.txt
+   python manage.py migrate
+   ```
+2. Copy `backend/.env.example` to `backend/.env` and add your Razorpay Test Mode API Key ID and Key Secret from the Dashboard. Keep `.env` private; never put the Key Secret in frontend code or share it in Git. A manager testing the project should use their own Razorpay Test Mode keys.
+3. Start Django and Vite. In Razorpay Dashboard, add a webhook to `https://<your-public-backend>/api/orders/razorpay-webhook/` and use the same webhook secret. Localhost cannot receive Razorpay webhooks unless you expose it through a secure tunnel.
+4. Test both a successful and a failed checkout with Test Mode before adding Live Mode keys in the production backend environment.
+
+The checkout calculates product prices and supported coupon discounts on Django, creates the Razorpay order there, and verifies the payment signature server-side. A successful online order is marked paid only after Razorpay reports the payment as captured.

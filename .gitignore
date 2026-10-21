@@ -1,0 +1,3 @@
+# Local environment files and secrets
+**/.env
+!.env.example
