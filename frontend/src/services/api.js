@@ -1,5 +1,5 @@
-const API_BASE = 'http://127.0.0.1:8000/api';
-export const MEDIA_BASE = '/media';
+const API_BASE = 'https://stepup-wx1d.onrender.com/api';
+export const MEDIA_BASE = 'https://stepup-wx1d.onrender.com/media';
 
 export const api = {
   // Auth
