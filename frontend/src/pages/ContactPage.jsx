@@ -74,7 +74,7 @@ export default function ContactPage({ setCurrentPage }) {
 
           <img
             className="contact-feature-image"
-            src="/media/contact.JPG"
+            src="https://stepup-wx1d.onrender.com/media/contact.JPG"
             alt="StepUp shoes in a colorful collection"
           />
         </section>

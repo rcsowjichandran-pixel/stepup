@@ -60,7 +60,7 @@ export default function AboutPage({ setCurrentPage }) {
           <div
             className="about-mission-image"
           >
-            <img src="/media/aboutcenter.jpg" alt="Blue and pink children's shoes" />
+            <img src="https://stepup-wx1d.onrender.com/media/about.jpg" alt="StepUp footwear collection"/>
           </div>
         </section>
 
