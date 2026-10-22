@@ -111,9 +111,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = [
-"https://stepup-1-6wcf.onrender.com",
-"http://127.0.0.1:5173"
+CORS_ALLOWED_ORIGINS = [
+"https://stepup-1-6wcf.onrender.com", # your deployed frontend URL
+"http://127.0.0.1:5173" # local frontend
 ]
 CORS_ALLOW_CREDENTIALS = True
 
