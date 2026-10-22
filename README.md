@@ -101,7 +101,7 @@ npm run dev -- --host 127.0.0.1 --port 5173
 ```
 Website URL: `http://127.0.0.1:5173/`
 Vite proxies `/media/` requests to Django, so imported backend images are served through the frontend origin.
-For local development, the frontend API URL defaults to the deployed API. Set `VITE_API_BASE=http://127.0.0.1:8000/api` before starting Vite to use your local Django server.
+For local development, the frontend API URL defaults to `http://127.0.0.1:8000/api` and reads products from the local SQLite database. Set `VITE_API_BASE` to override the API URL. Production builds default to the deployed API unless `VITE_API_BASE` is set during build.
 
 ### Razorpay test setup
 
@@ -116,9 +116,3 @@ For local development, the frontend API URL defaults to the deployed API. Set `V
 4. Test both a successful and a failed checkout with Test Mode before adding Live Mode keys in the production backend environment.
 
 The checkout calculates product prices and supported coupon discounts on Django, creates the Razorpay order there, and verifies the payment signature server-side. A successful online order is marked paid only after Razorpay reports the payment as captured.
-
-### Keeping live orders in a persistent database
-
-The backend uses `backend/db.sqlite3` for local development. Hosted deployments should set `DATABASE_URL` to a managed PostgreSQL database connection string in the backend service's private environment, then deploy and run Django migrations (`python manage.py migrate`). The settings use PostgreSQL whenever `DATABASE_URL` is set and SQLite otherwise. Do not commit the connection string.
-
-Both Cash on Delivery and Razorpay checkouts create an `Order` and its `OrderItem` rows through `/api/orders/checkout/`. Razorpay orders start as pending and become paid after server verification or a valid `payment.captured` webhook. Configure the webhook secret in the backend and the matching webhook URL in Razorpay. Django admin shows orders and their item details at `/admin/`.

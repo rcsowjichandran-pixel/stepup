@@ -1,4 +1,7 @@
-const API_ORIGIN = import.meta.env.VITE_API_BASE || 'https://stepup-wx1d.onrender.com/api';
+const DEFAULT_API_ORIGIN = import.meta.env.DEV
+  ? 'http://127.0.0.1:8000/api'
+  : 'https://stepup-wx1d.onrender.com/api';
+const API_ORIGIN = import.meta.env.VITE_API_BASE || DEFAULT_API_ORIGIN;
 const API_BASE = API_ORIGIN.replace(/\/$/, '');
 export const MEDIA_BASE = `${API_BASE.replace(/\/api$/, '')}/media`;
 
