@@ -7,17 +7,18 @@ django.setup()
 from django.contrib.auth.models import User
 from products.models import Category, SubCategory, Brand, Product
 
-def seed():
+def seed(create_demo_users=True):
     print("Seeding StepUp database...")
 
     # 1. Superuser & Demo User
-    if not User.objects.filter(username='admin').exists():
-        User.objects.create_superuser('admin', 'admin@stepup.in', 'admin123')
-        print("Created superuser: admin / admin123")
+    if create_demo_users:
+        if not User.objects.filter(username='admin').exists():
+            User.objects.create_superuser('admin', 'admin@stepup.in', 'admin123')
+            print("Created superuser: admin / admin123")
 
-    if not User.objects.filter(username='demo_user').exists():
-        demo = User.objects.create_user('demo_user', 'user@stepup.in', 'user123', first_name='Rohan', last_name='Sharma')
-        print("Created demo user: user@stepup.in / user123")
+        if not User.objects.filter(username='demo_user').exists():
+            User.objects.create_user('demo_user', 'user@stepup.in', 'user123', first_name='Rohan', last_name='Sharma')
+            print("Created demo user: user@stepup.in / user123")
 
     # 2. Categories
     cat_women, _ = Category.objects.get_or_create(
@@ -401,4 +402,13 @@ def seed():
     print("Database seeding completed successfully!")
 
 if __name__ == '__main__':
-    seed()
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Seed the StepUp catalog and optional demo users.')
+    parser.add_argument(
+        '--catalog-only',
+        action='store_true',
+        help='Seed categories and products without creating demo accounts.',
+    )
+    args = parser.parse_args()
+    seed(create_demo_users=not args.catalog_only)
