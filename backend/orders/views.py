@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import base64
+import re
 from decimal import Decimal
 from urllib.request import Request, urlopen
 
@@ -37,6 +38,42 @@ def _razorpay_api_request(endpoint, payload=None):
     )
     with urlopen(request, timeout=15) as response:
         return json.loads(response.read())
+
+
+def _get_razorpay_customer_id(order):
+    previous_order = (
+        Order.objects.filter(
+            email__iexact=order.email,
+            phone=order.phone,
+            razorpay_customer_id__gt='',
+        )
+        .exclude(pk=order.pk)
+        .first()
+    )
+    if previous_order:
+        return previous_order.razorpay_customer_id
+
+    phone_digits = re.sub(r'\D', '', order.phone)
+    if len(phone_digits) == 10:
+        contact = f'+91{phone_digits}'
+    elif 11 <= len(phone_digits) <= 15:
+        contact = f'+{phone_digits}'
+    else:
+        raise ValueError('Enter a valid phone number to use Razorpay card saving.')
+
+    customer = _razorpay_api_request('customers', {
+        'name': order.full_name[:50],
+        'email': order.email,
+        'contact': contact,
+        'fail_existing': '0',
+    })
+    customer_id = customer.get('id')
+    if not customer_id:
+        raise ValueError('Razorpay did not return a customer ID for card saving.')
+
+    order.razorpay_customer_id = customer_id
+    order.save(update_fields=['razorpay_customer_id'])
+    return customer_id
 
 
 def _price_cart_items(raw_items):
@@ -117,15 +154,16 @@ def checkout_view(request):
         order = serializer.save(payment_status='Pending', order_status=order_status)
         if online_payment:
             try:
+                customer_id = _get_razorpay_customer_id(order)
                 gateway_order = _razorpay_api_request('orders', {
                     'amount': int(total * 100),
                     'currency': 'INR',
                     'receipt': f'stepup_{order.id}',
                     'notes': {'stepup_order_id': str(order.id)},
                 })
-            except Exception:
+            except (ValueError, OSError, KeyError, TypeError):
                 transaction.set_rollback(True)
-                return Response({'detail': 'Could not start Razorpay checkout. Please try again.'}, status=502)
+                return Response({'detail': 'Could not prepare Razorpay card checkout. Check the customer details and try again.'}, status=502)
             order.razorpay_order_id = gateway_order['id']
             order.save(update_fields=['razorpay_order_id'])
 
@@ -140,6 +178,7 @@ def checkout_view(request):
     if online_payment:
         response_data.update({
             'razorpay_order_id': order.razorpay_order_id,
+            'razorpay_customer_id': customer_id,
             'razorpay_key_id': settings.RAZORPAY_KEY_ID,
             'currency': 'INR',
             'amount': int(total * 100),

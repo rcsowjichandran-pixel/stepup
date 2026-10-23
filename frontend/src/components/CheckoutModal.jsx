@@ -7,7 +7,6 @@ import { api } from '../services/api';
 const DELIVERY_STORAGE_KEY = 'stepup_last_delivery';
 const CASH_ON_DELIVERY = 'Cash on Delivery';
 const RAZORPAY = 'Razorpay';
-const DEMO_OTP = '123456';
 
 function loadRazorpay() {
   if (window.Razorpay) return Promise.resolve();
@@ -97,7 +96,6 @@ export default function CheckoutModal({
   });
   const [hasSavedDelivery] = useState(() => Boolean(savedDelivery));
   const [step, setStep] = useState('shipping');
-  const [demoOtp, setDemoOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [error, setError] = useState(null);
@@ -145,7 +143,9 @@ export default function CheckoutModal({
             name: 'StepUp',
             description: `Order #${response.order_id}`,
             order_id: response.razorpay_order_id,
+            customer_id: response.razorpay_customer_id,
             prefill: { name: formData.fullName, email: formData.email, contact: formData.phone },
+            remember_customer: true,
             theme: { color: '#2F4F4F' },
             handler: resolve,
             modal: { ondismiss: () => reject(new Error('Payment was cancelled. You can try again.')) },
@@ -333,122 +333,6 @@ export default function CheckoutModal({
                 : 'Please wait while we confirm your order.'}
             </p>
           </div>
-        ) : step === 'demo-otp' ? (
-          <div style={{ padding: '32px 28px' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setStep('payment');
-              }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                border: 0,
-                background: 'none',
-                color: '#2F4F4F',
-                cursor: 'pointer',
-                padding: 0,
-                marginBottom: '16px',
-              }}
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
-            <h3 style={{
-              fontFamily: "'Libre Baskerville', Georgia, serif",
-              fontSize: '21px',
-              color: '#2F4F4F',
-              marginBottom: '6px',
-            }}>
-              Demo OTP
-            </h3>
-            <p style={{ fontSize: '13px', color: '#666666', marginBottom: '18px' }}>
-              This is a simulated step for this test project. It is not a bank OTP and does not authenticate your card.
-            </p>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (demoOtp !== DEMO_OTP) {
-                  setError('Incorrect demo code. Enter 123456 to continue.');
-                  return;
-                }
-                setError(null);
-                void placeOrder(RAZORPAY);
-              }}
-            >
-              <div style={{
-                padding: '12px',
-                borderRadius: '6px',
-                backgroundColor: '#EDF3F3',
-                color: '#2F4F4F',
-                fontSize: '14px',
-                textAlign: 'center',
-                marginBottom: '16px',
-              }}>
-                Demo code: <b>{DEMO_OTP}</b>
-              </div>
-              <label htmlFor="demo-otp" style={{
-                display: 'block',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#333333',
-                marginBottom: '6px',
-              }}>
-                Enter demo code
-              </label>
-              <input
-                id="demo-otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={demoOtp}
-                onChange={(event) => setDemoOtp(event.target.value.replace(/\D/g, ''))}
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  border: '1px solid #CBD5E1',
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  letterSpacing: '0.25em',
-                  textAlign: 'center',
-                  marginBottom: '14px',
-                }}
-              />
-              {error && (
-                <div role="alert" style={{
-                  padding: '9px 12px',
-                  backgroundColor: '#FFEBEE',
-                  color: '#C62828',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  marginBottom: '14px',
-                }}>
-                  {error}
-                </div>
-              )}
-              <button
-                type="submit"
-                disabled={loading || demoOtp.length !== 6}
-                style={{
-                  width: '100%',
-                  backgroundColor: '#2F4F4F',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '12px',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                Continue to Razorpay Test Mode
-              </button>
-            </form>
-          </div>
         ) : step === 'payment' ? (
           <div style={{ padding: '32px 28px' }}>
             <button
@@ -487,7 +371,6 @@ export default function CheckoutModal({
                   type="button"
                   onClick={() => {
                     setError(null);
-                    setDemoOtp('');
                     setFormData((current) => ({ ...current, paymentMethod: method }));
                   }}
                   aria-pressed={formData.paymentMethod === method}
@@ -534,6 +417,21 @@ export default function CheckoutModal({
                 ? 'Pay the delivery partner when your order arrives.'
                 : 'Pay securely using the payment methods enabled in Razorpay Checkout.'}
             </div>
+
+            {formData.paymentMethod === RAZORPAY && (
+              <div style={{
+                padding: '12px',
+                border: '1px solid #E2E8F0',
+                borderRadius: '6px',
+                color: '#555555',
+                fontSize: '12px',
+                lineHeight: 1.6,
+                marginBottom: '16px',
+              }}>
+                <b>Razorpay Test Mode card:</b> Visa 4100 2800 0000 1007<br />
+                Use any CVV and a future expiry date. Click Pay in Razorpay. If its mock bank OTP screen appears, enter any 4–10 digits, such as 123456, and submit. If a save-card prompt appears, choose “No thanks” to continue without saving the card. Use test card details only, never a real card.
+              </div>
+            )}
 
             <div style={{
               padding: '12px',
@@ -606,13 +504,7 @@ export default function CheckoutModal({
               type="button"
               disabled={loading || !hasDeliveryDetails}
               onClick={() => {
-                if (formData.paymentMethod === RAZORPAY) {
-                  setError(null);
-                  setDemoOtp('');
-                  setStep('demo-otp');
-                } else {
-                  void placeOrder(CASH_ON_DELIVERY);
-                }
+                void placeOrder(formData.paymentMethod);
               }}
               style={{
                 width: '100%',
@@ -628,7 +520,7 @@ export default function CheckoutModal({
             >
               {formData.paymentMethod === CASH_ON_DELIVERY
                 ? `Place Order · Cash on Delivery · ₹${grandTotal.toLocaleString()}`
-                : `Continue to demo OTP · ₹${grandTotal.toLocaleString()}`}
+                : `Pay with Razorpay · ₹${grandTotal.toLocaleString()}`}
             </button>
           </div>
         ) : (
