@@ -112,7 +112,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = ['https://stepup-1-6wcf.onrender.com',
-                          'http://127.0.0.1:5173']
+                          'http://127.0.0.1:5173',
+                          'http://localhost:5173']
 CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework Settings

@@ -5,34 +5,20 @@ import { useCart } from '../context/CartContext';
 import { api } from '../services/api';
 import './HomePage.css';
 
-const TRENDING_PRODUCT_ORDER = [
-  'ophelia-women-silver-glamour-heel',
-  'millie-women-silver-glamour-heel',
-  'upn-women-blush-slip-on-shoe',
-  'upn-women-navy-slip-on-shoe',
-  'men-black-navy-lace-up-sneaker',
-  'power-men-white-lace-up-sneaker',
-  'canny-kids-pink-daisy-print-sandal',
-  'canny-boys-blue-dinosaur-print-sneaker',
-];
-
 export default function HomePage({ setCurrentPage, onSelectCategory, onSelectProduct }) {
   const { applyCoupon } = useCart();
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [trendingLoadError, setTrendingLoadError] = useState(false);
   const [couponCopied, setCouponCopied] = useState(false);
 
   useEffect(() => {
     api.getProducts({ trending: true })
       .then(data => {
-        const productsBySlug = new Map(data.map(product => [product.slug, product]));
-        setTrendingProducts(
-          TRENDING_PRODUCT_ORDER
-            .map(slug => productsBySlug.get(slug))
-            .filter(Boolean)
-        );
+        setTrendingProducts(Array.isArray(data) ? data : []);
       })
       .catch(err => {
         console.error('Error fetching trending products:', err);
+        setTrendingLoadError(true);
       })
   }, []);
 
@@ -215,6 +201,17 @@ export default function HomePage({ setCurrentPage, onSelectCategory, onSelectPro
               </article>
             ))}
           </div>
+
+          {trendingLoadError && (
+            <p role="status" style={{ textAlign: 'center', color: '#666666' }}>
+              Trending products could not be loaded. Please refresh the page.
+            </p>
+          )}
+          {!trendingLoadError && trendingProducts.length === 0 && (
+            <p role="status" style={{ textAlign: 'center', color: '#666666' }}>
+              No trending products are available right now.
+            </p>
+          )}
 
           <div className="trending-view-all">
             <button

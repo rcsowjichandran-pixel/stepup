@@ -47,6 +47,7 @@ A footwear e-commerce application built with **React** frontend and **Python Dja
   - Password show/hide toggle eye icon
   - Google login authentication mockup
   - Real Django JWT / Session authentication (`/api/auth/login/`, `/api/auth/register/`)
+  - Registration generates a unique username from the email address; users only need to provide their name, email, and password.
 - **Shop / Catalog Page**:
   - Filter by category, brand, max price range slider, and search query
   - Sort by Most Popular, Price Low-High, Price High-Low, Newest

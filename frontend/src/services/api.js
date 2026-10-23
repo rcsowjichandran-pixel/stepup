@@ -57,7 +57,9 @@ export const api = {
     const url = `${API_BASE}/products/items/?${query.toString()}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch products');
-    return res.json();
+    const data = await res.json();
+    // Django REST Framework may return either a plain list or a paginated object.
+    return Array.isArray(data) ? data : Array.isArray(data.results) ? data.results : [];
   },
 
   async getProduct(slug) {
